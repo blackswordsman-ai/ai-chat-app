@@ -22,4 +22,17 @@ const registerValidationRules = [
     .withMessage("Password must be at least 6 characters long"),
 ];
 
-module.exports = { registerValidationRules };
+const userLoginRules = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .trim(),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password is required"),
+];
+
+module.exports = { 
+  registerValidationRules,
+  userLoginRules
+ };
