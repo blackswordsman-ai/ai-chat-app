@@ -32,7 +32,46 @@ const userLoginRules = [
     .withMessage("Password is required"),
 ];
 
+
+const addChatBotRules = [
+  body("name")
+    .notEmpty()
+    .withMessage("Name is required")
+    .trim(),
+  body("message")
+    .notEmpty()
+    .withMessage("Message is required")
+    .trim(),
+  body("promptMessage")
+    .notEmpty()
+    .withMessage("promptMessage is required")
+    .trim(),
+  body('image').custom((value, {req}) => {
+    // Check if file was uploaded
+    if (!req.file) {
+      throw new Error('Image file is required');
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      throw new Error('Only .png, .jpg and .jpeg format allowed!');
+    }
+    
+    // Validate file size (optional - limit to 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (req.file.size > maxSize) {
+      throw new Error('File size too large. Maximum size is 5MB');
+    }
+    
+    return true;
+  }),
+
+  
+];
+
 module.exports = { 
   registerValidationRules,
-  userLoginRules
+  userLoginRules,
+  addChatBotRules
  };

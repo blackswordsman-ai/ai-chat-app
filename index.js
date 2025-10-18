@@ -4,11 +4,13 @@ const { connect } = require("./config/database");
 
 
 const authRoutes = require("./routes/authRoute");
+const adminRoutes = require("./routes/adminRoute");
 
 const app = express();
 app.use(express.json());
 
 app.use("/api", authRoutes);
+app.use("/admin/api", adminRoutes);
 
 const startServer = async () => {
   await connect();  // now waits until DB is connected and console logged
