@@ -21,7 +21,14 @@ const sendMessage = async (req, res) => {
     }
 
     const { message, chatBotId, conversationId } = req.body;
-    const userId = req.user ? req.user.id : req.user; // Handle both cases
+    const userId = req.user?.id; // Extract user ID from authenticated user
+    
+    // Debug logging for authentication
+    console.log("Authentication debug:", {
+      hasUser: !!req.user,
+      userStructure: req.user ? Object.keys(req.user) : 'no user',
+      userId: userId
+    });
 
     // Check if chat bot exists and is active
     const botCheck = await checkBotExists(chatBotId);
@@ -55,7 +62,7 @@ const sendMessage = async (req, res) => {
       try {
         // Validate required fields before database operations
         if (!userId) {
-          throw new Error("User ID is required");
+          throw new Error("User ID is required - please ensure you are properly authenticated");
         }
         if (!chatBotId) {
           throw new Error("ChatBot ID is required");
