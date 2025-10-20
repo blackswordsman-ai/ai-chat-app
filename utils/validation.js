@@ -114,10 +114,29 @@ const deleteChatBotRules = [
     .trim(),
 ];
 
+const sendMessageRules = [
+  body("message")
+    .notEmpty()
+    .withMessage("Message is required")
+    .trim()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage("Message must be between 1 and 1000 characters"),
+  body("chatBotId")
+    .notEmpty()
+    .withMessage("ChatBot ID is required")
+    .isMongoId()
+    .withMessage("Invalid ChatBot ID format"),
+  body("conversationId")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid Conversation ID format"),
+];
+
 module.exports = { 
   registerValidationRules,
   userLoginRules,
   addChatBotRules,
   updateChatBotRules,
-  deleteChatBotRules
+  deleteChatBotRules,
+  sendMessageRules
  };
