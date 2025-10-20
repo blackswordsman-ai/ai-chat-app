@@ -48,9 +48,6 @@ const addChatBot = async (req, res) => {
     }
 }
 
-
-
-
 const getChatBots = async (req, res) => {
     try {
         const chatBots = await ChatBot.find({})
@@ -126,6 +123,7 @@ const updateChatBot = async (req, res) => {
     }
 };
 
+
 const deleteChatBots = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -138,10 +136,13 @@ const deleteChatBots = async (req, res) => {
         const {id} = req.body; // Expecting an array of IDs to delete
         const chatBots = await ChatBot.find({_id:id});
 
-        const oldFilePath = chatBots.map(chatBot => path.join(__dirname, '../public/' + chatBot.image));
-        await deleteFile(oldFilePath);
+        // Delete associated files
+        for (const chatBot of chatBots) {
+            const oldFilePath = path.join(__dirname, '../public/' + chatBot.image);
+            await deleteFile(oldFilePath);
+        }
 
-      const data =  await ChatBot.deleteOne({_id:id})
+        const data = await ChatBot.deleteOne({_id:id})
         return res.status(200).json({
             success: true,
             message: "Chat bots deleted successfully",
@@ -158,13 +159,12 @@ const deleteChatBots = async (req, res) => {
 }
 
 
+
+
     
     
 
     
-
-
-
 module.exports = {
     addChatBot,
     getChatBots,
