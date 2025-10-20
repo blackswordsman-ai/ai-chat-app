@@ -4,7 +4,7 @@ const { validationResult } = require('express-validator');
 const Chat = require('../models/chatModel');
 const Conversation = require('../models/conversationModel');
 const ChatBot = require('../models/chatBotModel');
-const { checkBotExists } = require('../utils/helper');
+const { checkBotExists, createConversation, updateConversation, createChat } = require('../utils/helper');
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
@@ -21,7 +21,7 @@ const sendMessage = async (req, res) => {
     }
 
     const { message, chatBotId, conversationId } = req.body;
-    const userId = req.user?.id; // Extract user ID from authenticated user
+    const userId = req.user?._id; // Extract user ID from authenticated user
     
     // Debug logging for authentication
     console.log("Authentication debug:", {
@@ -71,39 +71,68 @@ const sendMessage = async (req, res) => {
           throw new Error("AI response text is required");
         }
 
+        // Handle conversation creation or update using helper functions
+        console.log("Starting conversation operations:", { conversationId, userId, chatBotId });
+        
         if (conversationId) {
-          conversation = await Conversation.findById(conversationId);
-          if (conversation) {
-            conversation.lastMessage = text;
-            await conversation.save();
-          } else {
-            // Create new conversation if the provided ID doesn't exist
-            conversation = new Conversation({
-              userId: userId,
-              chatBotId: chatBotId,
-              lastMessage: text
-            });
-            await conversation.save();
-          }
-        } else {
-          conversation = new Conversation({
-            userId: userId,
-            chatBotId: chatBotId,
+          // Try to update existing conversation
+          console.log("Attempting to update conversation:", conversationId);
+          const updateResult = await updateConversation(conversationId, userId, {
             lastMessage: text
           });
-          await conversation.save();
+          console.log("Update result:", updateResult);
+          
+          if (updateResult.success) {
+            conversation = updateResult.conversation;
+            console.log("Conversation updated successfully:", conversation._id);
+          } else {
+            // If update fails (conversation doesn't exist or doesn't belong to user),
+            // create a new conversation
+            console.log("Update failed, creating new conversation");
+            const createResult = await createConversation(userId, chatBotId, text);
+            console.log("Create result:", createResult);
+            if (createResult.success) {
+              conversation = createResult.conversation;
+              console.log("New conversation created:", conversation._id);
+            } else {
+              throw new Error(createResult.message);
+            }
+          }
+        } else {
+          // Create new conversation
+          console.log("Creating new conversation");
+          const createResult = await createConversation(userId, chatBotId, text);
+          console.log("Create result:", createResult);
+          if (createResult.success) {
+            conversation = createResult.conversation;
+            console.log("Conversation created successfully:", conversation._id);
+          } else {
+            throw new Error(createResult.message);
+          }
         }
 
-        // Save chat record
-        const chat = new Chat({
-          userId: userId,
-          conversationId: conversation._id,
-          chatBotId: chatBotId,
+        // Create chat record using helper function
+        console.log("Creating chat record with:", {
+          userId, 
+          conversationId: conversation._id, 
+          chatBotId, 
+          lastMessage: text, 
+          userMessage: message || '', 
+          aiMessage: text
+        });
+        
+        const chatResult = await createChat(userId, conversation._id, {
           lastMessage: text,
           userMessage: message || '',
           aiMessage: text
         });
-        await chat.save();
+        
+        if (!chatResult.success) {
+          throw new Error(chatResult.message);
+        }
+        
+        const chat = chatResult.chat;
+        console.log("Chat record created successfully:", chat._id);
       } catch (dbError) {
         console.error("Database error details:", {
           message: dbError.message,
