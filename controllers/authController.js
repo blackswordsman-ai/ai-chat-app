@@ -12,13 +12,14 @@ const register = async (req, res) => {
                 errors: errors.array()
             });
         }
-        const {name, email, password} = req.body;
+        const {name, email, password,isAdmin} = req.body;
         const encryptedPassword = await bcrypt.hash(password, 10);
 
         const newUser = new User({
             name,
             email,
-            password: encryptedPassword
+            password: encryptedPassword,
+            isAdmin
         })
         await newUser.save();
         res.status(201).json({

@@ -41,8 +41,9 @@ const upload = multer({
   }
 });
 const adminController = require("../controllers/adminController");
-const  { addChatBotRules } = require("../utils/validation");
+const  { addChatBotRules,updateChatBotRules,deleteChatBotRules } = require("../utils/validation");
 const auth = require("../middlewares/auth");
+const adminAuth = require("../middlewares/adminAuth");
 
 router.post(
   "/add-chat-bot",
@@ -69,7 +70,22 @@ router.post(
   adminController.addChatBot
 );
 
-router.get('/chat-bots', auth, adminController.getChatBots);
+router.get('/chat-bots', adminAuth, adminController.getChatBots);
+
+router.put(
+  "/update-chat-bot",
+  adminAuth,
+  upload.single("image"),
+  updateChatBotRules,
+  adminController.updateChatBot
+);
+
+router.delete(
+  "/delete-chat-bots",
+  adminAuth,
+  deleteChatBotRules,
+  adminController.deleteChatBots
+);
 
 
 

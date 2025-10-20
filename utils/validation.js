@@ -70,8 +70,54 @@ const addChatBotRules = [
   
 ];
 
+const updateChatBotRules = [
+  body("id")
+    .notEmpty()
+    .withMessage("ID cannot be empty")
+    .trim(),
+    body("name")
+    .notEmpty()
+    .withMessage("Name cannot be empty")
+    .trim(),
+  body("message")
+    .optional()
+    .notEmpty()
+    .withMessage("Message cannot be empty")
+    .trim(),
+  body("promptMessage")
+    .optional()
+    .notEmpty()
+    .withMessage("promptMessage cannot be empty")
+    .trim(),
+  body('image').custom((value, {req}) => {
+    if (req.file) {
+      // Validate file type
+      const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        throw new Error('Only .png, .jpg and .jpeg format allowed!');
+      }
+      
+      // Validate file size (optional - limit to 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (req.file.size > maxSize) {
+        throw new Error('File size too large. Maximum size is 5MB');
+      }
+    }
+    return true;
+  }),
+];
+
+const deleteChatBotRules = [
+  body("id")
+    .notEmpty()
+    .withMessage("ID cannot be empty")
+    .trim(),
+];
+
 module.exports = { 
   registerValidationRules,
   userLoginRules,
-  addChatBotRules
+  addChatBotRules,
+  updateChatBotRules,
+  deleteChatBotRules
  };
